@@ -17,7 +17,7 @@ area = 0
         #bot.send_photo(message.chat.id, file)
 
 #
-@bot.message_handler()
+@bot.message_handler(content_types=['text'])
 def start(message):
     if message.text == 'Привет':
         bot.send_message(message.from_user.id, "Как тебя зовут?")
@@ -60,7 +60,7 @@ def member(message):
 def second_flat_area(message):
     global second_area
     global member1
-    bot.send_message(message.chat.id, 'Сколько квадратных метров второй комнаты?')
+    #bot.send_message(message.chat.id, 'Сколько квадратных метров второй комнаты?')
     bot.register_next_step_handler(message, member1)
     member1 = message.text
     bot.send_message(message.chat.id, 'Запомнил')
@@ -75,7 +75,10 @@ def second_flat_area(message):
 
 def third_flat_area(message):
     global third_area
-    bot.send_message(message.chat.id, 'Сколько квадратных метров третьей комнаты?')
+    global member1
+    bot.register_next_step_handler(message, member1)
+    member1 = message.text
+    bot.send_message(message.chat.id, 'Запомнил')
     keyboard = types.InlineKeyboardMarkup()
     key_painting = types.InlineKeyboardButton(text='Покраска', callback_data='painting')
     keyboard.add(key_painting)
@@ -85,30 +88,35 @@ def third_flat_area(message):
     bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
     bot.register_next_step_handler(message, full_price)
 
-
+def full_price(message):
+    global priceall
+    priceall = int(pricepainting) + int(pricedecor)
+    bot.send_message(message.from_user.id, ' Cтоимость всего ремонта составит ' + str(priceall) + ' долларов')
+    bot.register_next_step_handler(message, call_back_data)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
-    global  pricepainting
+    global pricepainting
     global pricedecor
+    global first_area
     if call.data == 'painting':
         pricepainting = (int(member1) * 8)
-        bot.send_message(call.message.chat.id, 'Комнату будем красить. ''Стоимость ремонта: ' + str(pricepainting)+ ' долларов. ' 'Вы согласны?')
+        bot.send_message(call.message.chat.id, 'Комнату будем красить. ''Стоимость ремонта: ' + str(pricepainting) + ' долларов. ' 'Сколько квадратных метров следующая комната?')
     elif call.data == 'decor':
         pricedecor = (int(member1) * 17)
-        bot.send_message(call.message.chat.id, 'В комнате будем наносить декоративную штукатурку. ''Стоимость ремонта: ' + str(pricedecor)+ ' долларов. ''Вы согласны?')
+        bot.send_message(call.message.chat.id, 'В комнате будем наносить декоративную штукатурку. ''Стоимость ремонта: ' + str(pricedecor) + ' долларов. ' 'Сколько квадратных метров следующая комната?')
 
-@bot.callback_query_handler(func=lambda call: True)
-def full_price(call):
-    global priceall
-    priceall = pricepainting + pricedecor
-    bot.send_message(call.message.chat.id, 'Cтоимость всего ремонта составит' + str(priceall)+ ' долларов')
 
-@bot.message_handler(commands=['url'])
+
 def call_back_data(message):
+    bot.register_next_step_handler(message, call_back_data)
     markup = types.InlineKeyboardMarkup()
-    #btn_my_site = types.InlineKeyboardButton(text='Наш сайт', url='https://krasdom.by/index.php')
+    btn_my_site = types.InlineKeyboardButton(text='Наш сайт', url='https://krasdom.by/index.php')
     markup.add(btn_my_site)
     bot.send_message(message.chat.id, "На сайте Красочного дома, Вы, можете ознакомиться с материалами и галереей работ наших мастеров", reply_markup=keyboard)
 
-bot.polling(none_stop=True, interval=0)
+while True:
+    try:
+        bot.polling(none_stop=True, interval=0)
+    except Exception:
+      pass
