@@ -90,26 +90,34 @@ def third_flat_area(message):
 
 def full_price(message):
     global priceall
-    priceall = int(pricepainting) + int(pricedecor)
-    bot.send_message(message.from_user.id, ' Cтоимость всего ремонта составит ' + str(priceall) + ' долларов')
+    global listallarea
+    global listarea
+    #priceall = int(pricepainting) + int(pricedecor)
+    listallarea = sum(listarea)
+    bot.send_message(message.from_user.id, ' Cтоимость всего ремонта составит ' + listallarea + ' долларов')
     bot.register_next_step_handler(message, call_back_data)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     global pricepainting
     global pricedecor
-    global first_area
+    global listarea
+    global listallarea
+    listarea = []
     if call.data == 'painting':
         pricepainting = (int(member1) * 8)
         bot.send_message(call.message.chat.id, 'Комнату будем красить. ''Стоимость ремонта: ' + str(pricepainting) + ' долларов. ' 'Сколько квадратных метров следующая комната?')
     elif call.data == 'decor':
         pricedecor = (int(member1) * 17)
         bot.send_message(call.message.chat.id, 'В комнате будем наносить декоративную штукатурку. ''Стоимость ремонта: ' + str(pricedecor) + ' долларов. ' 'Сколько квадратных метров следующая комната?')
+    listarea.append(pricepainting)
+    listarea.append(pricedecor)
+    listallarea = sum(int(listarea))
 
 
 
-def call_back_data(message):
-    bot.register_next_step_handler(message, call_back_data)
+def call_back_data(call):
+    bot.register_next_step_handler(call, call_back_data)
     markup = types.InlineKeyboardMarkup()
     btn_my_site = types.InlineKeyboardButton(text='Наш сайт', url='https://krasdom.by/index.php')
     markup.add(btn_my_site)
